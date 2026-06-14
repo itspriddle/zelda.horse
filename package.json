@@ -1,0 +1,13 @@
+{
+  "name": "zelda-horse",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Official portal of the Feline–Equine Reclassification Authority",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "^4.100.0"
+  }
+}

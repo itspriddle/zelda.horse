@@ -1,0 +1,53 @@
+# Builds deploys it to Cloudflare Workers (static assets).
+#
+# Uses cloudflare/wrangler-action (pinned to a commit SHA) + `wrangler deploy`.
+# Requires two secrets on the `production` environment:
+#   CLOUDFLARE_API_TOKEN  - "Edit Cloudflare Workers" scoped token
+#   CLOUDFLARE_ACCOUNT_ID - account ID wrangler deploys to
+name: Deploy site to Cloudflare Workers
+
+on:
+  # Runs on pushes targeting the default branch
+  push:
+    branches: ["main"]
+
+  # Rebuild at midnight UTC on January 1st to update copyright year
+  schedule:
+    - cron: "0 0 1 1 *"
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+concurrency:
+  group: "deploy"
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    # Skip builds with "[ci skip]" in the commit (scheduled/manual runs always proceed)
+    if: github.event_name != 'push' || !contains(github.event.head_commit.message, '[ci skip]')
+
+    environment:
+      name: production
+      url: https://zelda.horse
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Deploy to Cloudflare Workers
+        uses: cloudflare/wrangler-action@ebbaa1584979971c8614a24965b4405ff95890e0 # v4.0.0
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          wranglerVersion: "4"
+          command: deploy
